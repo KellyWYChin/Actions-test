@@ -1,0 +1,522 @@
+---
+title: "Vitamin B12 (COBALAMIN) concentrations in Basepowder 111717"
+author: "Kelly Chin"
+output: 
+html_notebook: 
+    theme: united
+    toc: TRUE
+    toc_float : TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+For **BP 111717 Recipe**, specifications' min, targets, and max values from monitoring the vitamin B12 (suppliers' info) are provided for 6 out of 7 RMs:
+
+* SKIMMED MILK CONCENTRATE 20% NON SEASONAL (SMC)
+* DEMIN WHEY CONCENTRATE 28% (DWC)
+* WPC 80 SWEET POWDER
+* WPC 80 ACID LIQUID
+* WPC 35 SWEET
+* WPC 35 ACID
+* *VIT MIX IF WS-FT162059EU*
+
+
+# How do the RM data look like?
+```{r message=FALSE, r,warning=FALSE}
+library(readxl)
+vitb12 <- read_excel("c:/users/chinkl/OneDrive - Danone/Documents/Milk Design 3.0/Examples.xlsx", sheet = "vit B12", 
+                       col_types = c("text", "text", "text", 
+                                     "text", "date", "text", "text", "text", 
+                                     "text", "text", "text", "text"))
+vitb12
+
+```
+
+##  SMC
+There are 11 measurements of Vitamin B12 in SMC from RMMP, ranging from 0.60 to 0.90 µg/100g, from 1 supplier.
+All measurements were collected between Jan. 2020 and Nov. 2020.
+```{r,warning=FALSE,message=FALSE}
+library(ggplot2)
+library(dplyr)
+SMC <- vitb12 %>%
+  filter(Product == "SKIMMED MILK CONCENTRATE 20% NON SEASONAL")
+SMC$Results <- as.numeric(SMC$Results)
+#summary(SMC)
+SMC<- SMC[order(as.Date(SMC$Production_date, format = "%d/%m/%Y")),]
+SMC$Production_date <- as.character(SMC$Production_date, format = "%d-%m-%Y")
+SMC
+p <- ggplot(SMC, aes(x=Production_date, y=Results, group=Product))+  
+  geom_point(size=2, shape=23) + geom_line(color="#014d64") +
+  geom_line(aes(y = mean(Results)), color = "red", size=0.7,  linetype = "solid") +
+  geom_line(aes(y = mean(Results) + 3*sd(Results)), color = "red", size=0.7,  linetype = "dotted") +
+  geom_line(aes(y = mean(Results) - 3*sd(Results)), color = "red", size=0.7,  linetype = "dotted") +
+  #geom_line(aes(y = mean(Results)+2*sd(Results)),  color = "blue", size=0.7,  linetype = "solid") +
+  facet_grid(`Supplier name` ~.)+ 
+  scale_x_discrete(limits=SMC$Production_date)+
+  theme_classic() + xlab("Production Date") + ylab("Vitamin B12 levels (µg/100g)") + theme(panel.border = element_blank(), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),                                                                                             panel.grid.major = element_blank(),                                                                     panel.grid.minor = element_blank())
+p + labs(title = "SMC")
+
+df <- data.frame(SMC)
+ggplot(df, aes(x=Results)) + 
+  geom_histogram(aes(y=..density..), colour="black", fill="white")+
+  geom_density(alpha=.2, fill="#FF6666") + xlim(0.4, 1.1) + ylim(0, 5.5)
+```
+
+## DEMIN WHEY CONCENTRATE 28%
+There are 12 measurements of Vitamin B12 in DEMIN WHEY CONCENTRATE 28% from 1 supplier, ranging from 0.47 to 0.75 µg/100g.
+All measurements were collected between Jan. 2020 and Dec. 2020.
+```{r,warning=FALSE,message=FALSE}
+library(ggplot2)
+library(dplyr)
+DWC <- vitb12 %>%
+  filter(Product == "DEMIN WHEY CONCENTRATE 28%")
+DWC$Results <- as.numeric(DWC$Results)
+DWC<- DWC[order(as.Date(DWC$Production_date, format = "%d/%m/%Y")),]
+#summary(DWC)
+DWC
+DWC$Production_date <- as.character(DWC$Production_date, format = "%d-%m-%Y")
+p <- ggplot(DWC, aes(x=Production_date, y=Results, group=Product))+ 
+  geom_point(size=2, shape=23) + geom_line(color="#014d64") +
+  geom_line(aes(y = mean(Results)), color = "red", size=0.7,  linetype = "solid") +
+  geom_line(aes(y = mean(Results) + 3*sd(Results)), color = "red", size=0.7,  linetype = "dotted") +
+  geom_line(aes(y = mean(Results) - 3*sd(Results)), color = "red", size=0.7,  linetype = "dotted") +
+  facet_grid(`Supplier name` ~.) +
+  scale_x_discrete(limits=DWC$Production_date)+
+  theme_classic() + xlab("Production Date") + ylab("Vitamin B12 levels (µg/100g)")+ 
+  theme(panel.border = element_blank(), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+                                                                                     panel.grid.major = element_blank(),
+                                                                                     panel.grid.minor = element_blank())
+
+p + labs(title = "DEMIN WHEY CONCENTRATE 28%")
+
+df <- data.frame(DWC)
+ggplot(df, aes(x=Results)) + 
+  geom_histogram(aes(y=..density..), colour="black", fill="white")+
+  geom_density(alpha=.2, fill="#FF6666") + xlim(0.25, 1) + ylim(0, 4.5)
+```
+
+##  WPC 80 SWEET POWDER
+There are 11 measurements of Vitamin B12 in WPC 80 SWEET POWDER from 2 different suppliers, ranging from 6.8 to 12.9 µg/100g.
+All measurements were collected between Oct. 2019 and Dec. 2020.
+```{r,warning=FALSE,message=FALSE}
+library(ggplot2)
+library(dplyr)
+WPC80 <- vitb12 %>%
+  filter(Product == "WPC 80 SWEET POWDER")
+WPC80$Results <- as.numeric(WPC80$Results)
+WPC80<- WPC80[order(as.Date(WPC80$Production_date, format = "%d/%m/%Y")),]
+WPC80$Production_date <- as.character(WPC80$Production_date, format = "%d-%m-%Y")
+#summary(WPC80)
+WPC80
+p <- ggplot(WPC80, aes(x=Production_date, y=Results, col=`Supplier name`, group=`Supplier name`))+ 
+  geom_point(size=2, shape=23) + geom_line(color="#014d64") +
+  geom_line(aes(y = mean(Results)), color = "red", size=0.7,  linetype = "solid") +
+  geom_line(aes(y = mean(Results) + 3*sd(Results)), color = "red", size=0.7,  linetype = "dotted") +
+  geom_line(aes(y = mean(Results) - 3*sd(Results)), color = "red", size=0.7,  linetype = "dotted") +
+  facet_grid(`Supplier name` ~.) +
+  scale_x_discrete(limits=WPC80$Production_date)+
+  theme_classic() + xlab("Production Date") + ylab("Vitamin B12 levels (µg/100g)")+ theme(panel.border = element_blank(), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+                                                                                            panel.grid.major = element_blank(),
+                                                                                            panel.grid.minor = element_blank())
+
+p + labs(title = "WPC 80 SWEET POWDER")
+
+df <- data.frame(WPC80)
+ggplot(df, aes(x=Results)) + 
+  geom_histogram(aes(y=..density..), colour="black", fill="white")+
+  geom_density(alpha=.2, fill="#FF6666") + xlim(4, 15) + ylim(0, 0.4)
+```
+
+## WPC 80 ACID LIQUID
+There are 6 measurements of Vitamin B12 in WPC 80 ACID *POWDER*, ranging from 8.0 to 11.2 µg/100g, from 1 supplier.
+All measurements were collected between Feb. 2020 and Sep. 2020.
+In this dataset, we use WPC 80 ACID *POWDER* to estimate the vitamin B12 level in WPC 80 ACID *LOQUID*.
+The powder WPC 80 ACID has a total solid % (TS) of 97.12, whereas the liquid WPC 80 ACID has a TS% of 19.4.
+Therefore, the sodium concentration in WPC 80 ACID LIQUID will be corrected as ((Vitamin B12 *19.4 )/ 97.12) µg/100g.
+After adjustment, Vitamin B12 ranged from 1.6 to 2.3 µg/100g in WPC 80 ACID LIQUID.
+```{r,warning=FALSE,message=FALSE}
+library(ggplot2)
+library(dplyr)
+WPC80L <- vitb12 %>%
+  filter(Product == "WPC 80 ACID POWDER")
+WPC80L$Results <- ((as.numeric(WPC80L$Results))*19.4)/97.12
+WPC80L<- WPC80L[order(as.Date(WPC80L$Production_date, format = "%d/%m/%Y")),]
+#summary(WPC80L)
+WPC80L
+WPC80L$Production_date <- as.character(WPC80L$Production_date, format = "%d-%m-%Y")
+p <- ggplot(WPC80L, aes(x=Production_date, y=Results, group=Product))+ 
+  geom_point(size=2, shape=23) + geom_line(color="#014d64") +
+  geom_line(aes(y = mean(Results)), color = "red", size=0.7,  linetype = "solid") +
+  geom_line(aes(y = mean(Results) + 3*sd(Results)), color = "red", size=0.7,  linetype = "dotted") +
+  geom_line(aes(y = mean(Results) - 3*sd(Results)), color = "red", size=0.7,  linetype = "dotted") +
+  facet_grid(`Supplier name` ~.) +
+  scale_x_discrete(limits=WPC80L$Production_date)+
+  theme_classic() + xlab("Production Date") + ylab("Vitamin B12 levels (µg/100g)")+ 
+  theme(panel.border = element_blank(), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+                                                                                     panel.grid.major = element_blank(),
+                                                                                     panel.grid.minor = element_blank())
+
+p + labs(title = "WPC 80 ACID LIQUID")
+
+df <- data.frame(WPC80L)
+ggplot(df, aes(x=Results)) + 
+  geom_histogram(aes(y=..density..), colour="black", fill="white")+
+  geom_density(alpha=.2, fill="#FF6666") + xlim(1, 2.8) + ylim(0, 2.8)
+
+```
+
+## WPC 35 SWEET
+There are only 2 measurements (7.6 and 8.1 µg/100g) of Vitamin B12 in WPC 35 SWEET from 1 supplier.
+These measurements were collected in Oct. 2020.
+```{r,warning=FALSE,message=FALSE}
+library(ggplot2)
+library(dplyr)
+WPC35 <- vitb12 %>%
+  filter(Product == "WPC 35 SWEET")
+WPC35$Results <- as.numeric(WPC35$Results)
+WPC35<- WPC35[order(as.Date(WPC35$Production_date, format = "%d/%m/%Y")),]
+#summary(WPC35)
+WPC35
+WPC35$Production_date <- as.character(WPC35$Production_date, format = "%d-%m-%Y")
+p <- ggplot(WPC35, aes(x=Production_date, y=Results, group=Product))+ 
+  geom_point(size=2, shape=23) + geom_line(color="#014d64") +
+  geom_line(aes(y = mean(Results)), color = "red", size=0.7,  linetype = "solid") +
+  geom_line(aes(y = mean(Results) + 3*sd(Results)), color = "red", size=0.7,  linetype = "dotted") +
+  geom_line(aes(y = mean(Results) - 3*sd(Results)), color = "red", size=0.7,  linetype = "dotted") +
+  facet_grid(`Supplier name` ~.) +
+  scale_x_discrete(limits=WPC35$Production_date)+
+  theme_classic() + xlab("Production Date") + ylab("Vitamin B12 levels (µg/100g)")+ 
+  theme(panel.border = element_blank(), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+                                                                                     panel.grid.major = element_blank(),
+                                                                                     panel.grid.minor = element_blank())
+
+p + labs(title = "WPC 35 SWEET")
+
+df <- data.frame(WPC35)
+ggplot(df, aes(x=Results)) + 
+  geom_histogram(aes(y=..density..), colour="black", fill="white")+
+  geom_density(alpha=.2, fill="#FF6666") + xlim(7, 9) + ylim(0, 1.5)
+```
+
+## WPC 35 ACID
+There are 10 measurements of Vitamin B12 in WPC 35 ACID, ranging from 7.0 and 8.7 µg/100g, from 1 supplier.
+All measurements were collected between Oct. 2019 and Aug. 2020.
+```{r,warning=FALSE,message=FALSE}
+library(ggplot2)
+library(dplyr)
+WPC35A <- vitb12 %>%
+  filter(Product == "WPC 35 ACID")
+WPC35A$Results <- as.numeric(WPC35A$Results)
+WPC35A<- WPC35A[order(as.Date(WPC35A$Production_date, format = "%d/%m/%Y")),]
+#summary(WPC35A)
+WPC35A
+WPC35A$Production_date <- as.character(WPC35A$Production_date, format = "%d-%m-%Y")
+p <- ggplot(WPC35A, aes(x=Production_date, y=Results, group=Product))+ 
+  geom_point(size=2, shape=23) + geom_line(color="#014d64") +
+  geom_line(aes(y = mean(Results)), color = "red", size=0.7,  linetype = "solid") +
+  geom_line(aes(y = mean(Results) + 3*sd(Results)), color = "red", size=0.7,  linetype = "dotted") +
+  geom_line(aes(y = mean(Results) - 3*sd(Results)), color = "red", size=0.7,  linetype = "dotted") +
+  facet_grid(`Supplier name` ~.) +
+  scale_x_discrete(limits=WPC35A$Production_date)+
+  theme_classic() + xlab("Production Date") + ylab("Vitamin B12 levels (µg/100g)")+ 
+  theme(panel.border = element_blank(), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+                                                                                     panel.grid.major = element_blank(),
+                                                                                     panel.grid.minor = element_blank())
+
+p + labs(title = "WPC 35 ACID")
+
+df <- data.frame(WPC35A)
+ggplot(df, aes(x=Results)) + 
+  geom_histogram(aes(y=..density..), colour="black", fill="white")+
+  geom_density(alpha=.2, fill="#FF6666") + xlim(6, 10) + ylim(0, 0.8)
+```
+
+# Current result from  PD 
+For Vitamin B12 the current approach implemented by PD gives the following result for target (min, max): 
+  0.969 (0.751,	1.204) µg/100g.
+  
+## Beta PERT Distribution of BestMix Calculation
+```{r,warning=FALSE,message=FALSE}
+library(mc2d)
+vitb12_beta <- rpert(n = 100000, min = 0.751, max = 1.204, mode = 0.969, shape = 4)
+mean(vitb12_beta)
+sd(vitb12_beta)
+quantile(vitb12_beta, probs=c(0.025, 0.975)) 
+```
+
+# Parametric  Monte Carlo (MC) approach
+Monte Carlo simulation is a general method of modelling stochastic processes. It simulates such a process by means of random numbers drawn from probability distributions which are assumed to accurately describe the uncertain components of the process being modelled. 
+
+In our example we have 7 RMs, which are assumed to be uncorrelated and we can make parametric assumptions of normality for each of their distributions using the data from suppliers. We have a vector of 6 RMs and for each of them, simulated data from 100000 samples are generated from a multivariate t-distribution using the means and covariance matrix constructed from the standard deviations of each of RMs distributions.
+
+## Original Designed Recipe with 4 Kinds of WPC
+```{r,warning=FALSE,message=FALSE}
+library(propagate)
+library(mc2d)
+set.seed(1234)
+SMCsim1    <- rnorm(100,  0.7036364,   sd = 0.1117383) 
+# multiply distribution of SMC with contribution of raw materal in BP
+weightSMC <- 79.359
+SMC_dist <- (weightSMC*SMCsim1)/100000000
+
+DWC_sim1 <- rnorm(100, 0.6075, sd = 0.1103816)
+DWC_dist <- (54.605*DWC_sim1)/100000000
+
+WPC80sim1  <-rnorm(100, 9.809091, sd = 1.569366)
+WPC80_dist <- (1.282*WPC80sim1)/100000000
+
+WPC35_sim1 <- rnorm(100, 7.85, sd = 0.3535534)
+WPC35_dist <- (2.856*WPC35_sim1)/100000000
+
+WPC35Asim1   <- rnorm(100, 8.03,  sd = 0.6129165)
+weightWPC35A <- 2.857
+WPC35A_dist  <- (weightWPC35A*WPC35Asim1)/100000000
+
+WPC80Lsim1 <- rnorm(100, 1.894323, sd = 0.2371654)
+WPC80L_dist <- (6.236*WPC80Lsim1)/100000000
+
+vitmix_dist <- 0.120433*rep(144.55, 100)/100000000
+
+EXPR1 <- expression((SMC_dist + DWC_dist + WPC80_dist + WPC35_dist + WPC35A_dist + WPC80L_dist +
+                       vitmix_dist)*1000000)
+DF1 <- cbind(SMC_dist, DWC_dist, WPC80_dist, WPC35_dist, WPC35A_dist, WPC80L_dist, 
+             vitmix_dist)
+
+RES1 <- propagate(expr = EXPR1, data = DF1, type = "stat", do.sim = TRUE, verbose = TRUE, nsim = 100000)
+RES1$sim
+#summary(RES1$sim)
+
+result_param <- RES1$resSIM
+
+plot(RES1)
+```
+
+## Alternative A with *WPC 35 SWEET* and *WPC 80 ACID LIQUID*
+```{r,warning=FALSE,message=FALSE}
+library(propagate)
+library(mc2d)
+set.seed(1234)
+SMCsim1    <- rnorm(100,  0.7036364,   sd = 0.1117383) 
+# multiply distribution of SMC with contribution of raw materal in BP
+weightSMC <- 79.359
+SMC_dist <- (weightSMC*SMCsim1)/100000000
+
+DWC_sim1 <- rnorm(100, 0.6075, sd = 0.1103816)
+DWC_dist <- (54.605*DWC_sim1)/100000000
+
+WPC35_sim1 <- rnorm(100, 7.85, sd = 0.3535534)
+WPC35_dist <- (5.713*WPC35_sim1)/100000000
+
+WPC80Lsim1 <- rnorm(100, 1.894323, sd = 0.2371654)
+WPC80L_dist <- (12.472*WPC80Lsim1)/100000000
+
+vitmix_dist <- 0.120433*rep(144.55, 100)/100000000
+
+EXPR2 <- expression((SMC_dist + DWC_dist + WPC35_dist + WPC80L_dist +
+                       vitmix_dist)*1000000)
+DF2 <- cbind(SMC_dist, DWC_dist, WPC35_dist, WPC80L_dist, 
+             vitmix_dist)
+
+RES2 <- propagate(expr = EXPR2, data = DF2, type = "stat", do.sim = TRUE, verbose = TRUE, nsim = 100000)
+RES2$sim
+
+result_param <- RES2$resSIM
+
+plot(RES2)
+```
+
+# Non-parameteric - Bootstrapping approach 
+
+Bootstrap is a computational resampling technique of inference about a population of interest using sample data, with the only input being the procedure for calculating the estimate (or estimator) of interest on a sample of data. It works by treating the observed sample as if it were the population, and we can repeatedly take R number of samples (of the same size as the original sample), *with replacement*. 
+
+The BS processes in as follows: 
+  
+* For each RM, sample one value, with replacemnt
+* Sum these 7 values
+* Repeat 100000 times
+* Calculate the mean and 2.5\% and 97.5\% percentiles.
+
+## Original Designed Recipe with 4 Kinds of WPC
+```{r,warning=FALSE,message=FALSE}
+set.seed(1234)
+results <- replicate(100000, {
+  smc  <- sample(SMC$Results, 1) 
+  SMC_dist <- (79.359*smc)/100000000
+  DWC <- sample(DWC$Results, 1)
+  DWC_dist <- (54.605*DWC)/100000000
+  wpc80 <- sample(WPC80$Results, 1)
+  wpc80_dist <-(1.282*wpc80)/100000000
+  WPC35 <- sample(WPC35$Results, 1)
+  WPC35_dist <- (2.856*WPC35)/100000000
+  wpc35a <- sample(WPC35A$Results, 1)
+  wpc35a_dist <- (2.857*wpc35a)/100000000
+  wpc80l <- sample(WPC80L$Results, 1)
+  wpc80l_dist <- (6.236*wpc80l)/100000000
+  vitmix_beta <- rpert(n=1, min = 144.55*0.9, max = 144.55*1.1, mode = 144.55, shape= 4)
+  vitmix_dist <- (0.120433*vitmix_beta)/100000000
+  
+  target   <- (SMC_dist +DWC_dist +wpc80_dist +WPC35_dist+ wpc35a_dist+ wpc80l_dist+
+                vitmix_dist)*1000000
+})
+
+summary(results)
+#sd(results)
+quantile(results, probs=c(0.025, 0.975)) 
+
+results <- as.data.frame(results)
+
+ggplot(results, aes(x=results)) + 
+  geom_histogram(aes(y=..density..), colour="black", fill="white", bins=30)+
+  geom_density(alpha=.2, fill="#FF6666") 
+```
+
+## Alternative A with *WPC 35 SWEET* and *WPC 80 ACID LIQUID*
+```{r,warning=FALSE,message=FALSE}
+set.seed(123)
+resultsA <- replicate(100000, {
+  smc  <- sample(SMC$Results, 1) 
+  SMC_dist <- (79.359*smc)/100000000
+  DWC <- sample(DWC$Results, 1)
+  DWC_dist <- (54.605*DWC)/100000000
+ 
+  WPC35 <- sample(WPC35$Results, 1)
+  WPC35_dist <- (5.713*WPC35)/100000000
+  
+  wpc80l <- sample(WPC80L$Results, 1)
+  wpc80l_dist <- (12.472*wpc80l)/100000000
+  vitmix_beta <- rpert(n=1, min = 144.55*0.9, max = 144.55*1.1, mode = 144.55, shape= 4)
+  vitmix_dist <- (0.120433*vitmix_beta)/100000000
+  
+  target   <- (SMC_dist +DWC_dist +WPC35_dist+ wpc80l_dist+
+                vitmix_dist)*1000000
+})
+
+summary(resultsA)
+#sd(resultsA)
+quantile(resultsA, probs=c(0.025, 0.975)) 
+
+resultsA <- as.data.frame(resultsA)
+
+ggplot(resultsA, aes(x=resultsA)) + 
+  geom_histogram(aes(y=..density..), colour="black", fill="white", bins=30)+
+  geom_density(alpha=.2, fill="#FF6666") 
+```
+
+## Fulda measurements of Vitamin B12 (Cobalamin)
+A total of 31 Vitamin B12 measurements, collected between April and September, from BP 111717 produced by Fulda.
+Sodium levels range from 0.65 to 1.170 µg per 100g BP 111717.
+Mean sodium level = 0.948 µg/100g BP.
+
+```{r,warning=FALSE,message=FALSE}
+library(readxl)
+library(dplyr)
+Examples <- read_excel("c:/users/chinkl/OneDrive - Danone/Documents/Milk Design 3.0/Examples.xlsx", 
+                       sheet = "Fulda-BP 111717", col_types = c("numeric", 
+                                                                "text", "numeric", "text", "numeric", 
+                                                                "numeric", "date", "numeric", "numeric", 
+                                                                "numeric", "numeric", "numeric", 
+                                                                "numeric", "numeric", "numeric", 
+                                                                "numeric", "text", "date", "date", 
+                                                                "numeric", "numeric", "numeric", 
+                                                                "numeric", "numeric", "numeric", 
+                                                                "text", "numeric", "numeric", "numeric", 
+                                                                "numeric", "text", "numeric", "numeric", 
+                                                                "numeric", "numeric", "text", "text", 
+                                                                "text", "text"))
+vB12 <- Examples %>%
+  filter(`Merkmal-Text`== "Vitamin B12 in µg/100g")
+B12 <- vB12[, c('Merkmal-Text', 'Mat-Bezeichnung', 'Entsteh-Datum', 'Mittelwert')]
+MeanB12 <- B12 %>%
+  group_by(`Entsteh-Datum`) %>%
+  summarize(meanMittelwert = mean (Mittelwert),
+            sdMittelwert = sd(Mittelwert))
+B12$`Entsteh-Datum` <- as.character(B12$`Entsteh-Datum`, format = "%d-%m-%Y")
+B12
+MeanB12
+library(ggplot2)
+p <- ggplot(B12, aes(x =`Entsteh-Datum`, y = Mittelwert)) +
+  #geom_point(size = 2, shape=23) +
+  stat_boxplot(geom = "errorbar", width = 0.2) +
+  geom_boxplot(fill = "#4271AE", colour = "#1F3552", outlier.shape = NA) +
+  geom_jitter(position = position_jitter(width = 0.05), colour = "red") +
+  scale_y_continuous(name ="Vitamin B12 in µg/100g BP 111717") +
+  scale_x_discrete(limits = B12$`Entsteh-Datum`)+
+  ggtitle("Fulda measurements of Vitamin B12 in BP 111717")+
+  xlab("Earliest date after BP 111717 was produced") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 2)) +
+  stat_summary(fun = mean, geom ="line", lwd = 0.5, aes(group = 1))
+p
+```
+
+## Bootstrapping for Fulda data
+```{r,warning=FALSE,message=FALSE}
+set.seed(1234)
+results_fulda <- replicate(100000, {
+b12 <- sample(B12$Mittelwert, 1)
+})
+summary(results_fulda)
+#sd(results_fulda)
+quantile(results_fulda, probs = c(0.025, 0.975))
+```
+
+# Comparison of target value derived by empirical approaches with data from supply point - Fulda.
+Using the FULDA data from file 'Examples', sheet 'Fulda-BP 111717' shared by Veerle (Buijs), we attempt a comparison of the empirically derived values with the actual distribution of Vitamin B12 levels in **BP 111717**. 
+```{r,warning=FALSE,message=FALSE}
+Mittelwert <- c(1.06, 1.06, 0.98, 0.98, 0.98, 0.98, 0.93, 1.17, 1.15, 0.89, 1.06, 0.92, 0.78, 0.98, 1.06, 1.16, 1.00, 0.9, 1.03, 0.86, 0.82, 0.90, 0.96, 0.88, 0.87, 0.86, 0.90, 0.65, 0.88, 0.84, 0.90) 
+summary(Mittelwert)
+#sd(Mittelwert)
+
+plot(density(Mittelwert))
+
+resBS <- sample(results[,1], 31)
+resBS_altA <- sample(resultsA[,1], 31) #BS results of Alternative A
+#resMC <- sample(RES1$resSIM, 31)
+#resMC_altA <- sample(RES2$resSIM, 31) #MC results of Alternative A
+library(ggplot2)
+set.seed(1234)
+#Original recipe
+dat <- data.frame(dens= c(Mittelwert, resBS), Distributions = c(rep("Fulda Data", 31), rep("Empirically derived using BS", 31)))
+#Alternative A
+datA <- data.frame(dens= c(Mittelwert, resBS_altA), Distributions = c(rep("Fulda Data", 31), rep("Empirically derived using BS",31)))
+datB <- data.frame(dens = c(resBS, resBS_altA), Distributions = c(rep("BS (Original recipe)", 31), rep("BS (Alternative A)", 31)))
+#Plot=
+ggplot(datB, aes(x = dens, fill = Distributions)) + geom_density(alpha = 0.2) +  xlim(0.25, 2.3) +
+  geom_vline(xintercept = c(0.751, 0.969, 1.204), colour = "blue" , size=0.7,  linetype = "dashed") +
+  annotate("text", x=c(0.720, 0.94, 1.17), y=3, angle = 90, label = c("BestMix Spec. Min.", "Target", "BestMix Spec. Max."), size = 3) +
+  ggtitle("Vitamin B12 Variation in BP 111717 - Original Recipe vs Alternative A - Bootstrapping")
+#Very much overlapping
+
+ggplot(dat, aes(x = dens, fill = Distributions)) + geom_density(alpha = 0.2) +  xlim(0.25, 2.3) +
+  geom_vline(xintercept = c(0.751, 0.969, 1.204), colour = "blue" , size=0.7,  linetype = "dashed") +
+  annotate("text", x=c(0.720, 0.94, 1.17), y = 3, angle = 90, label = c("BestMix Spec. Min.", "Target", "BestMix Spec. Max."), size = 3) +
+  ggtitle("Vitamin B12 Variation in BP 111717 - Original Recipe")
+
+ggplot(datA, aes(x = dens, fill = Distributions)) + geom_density(alpha = 0.2) +  xlim(0.25, 2.3) +
+  geom_vline(xintercept = c(0.751, 0.969, 1.204), colour = "blue" , size=0.7,  linetype = "dashed") +
+  annotate("text", x=c(0.720, 0.94, 1.17), y=3, angle = 90, label = c("BestMix Spec. Min.", "Target", "BestMix Spec. Max."), size = 3) +
+  ggtitle("Vitamin B12 Variation in BP 111717 - Alternative A")
+```
+```{r,warning=FALSE,message=FALSE}
+name <- c("BestMix", "Fulda", "BS(Original)", "BS(Alternative A)")
+min <- c(0.751, 0.650, 1.507, 1.527)
+twoper <- c(0.813, 0.748, 1.598, 1.58)
+median <- c(NA, 0.93, 1.754, 1.740)
+mean <- c(0.969, 0.948, 1.762, 1.749)
+ninetyper <- c(1.134, 1.163, 1.99, 1.98)
+max <- c(1.204, 1.170, 2.086, 2.055)
+sd <- c("0.113/ beta=0.086", "0.114", "0.107", "0.107")
+range <- c(1.204-0.751, 1.170-0.650, 2.086-1.507, 2.055-1.527)
+loss <- c("-", "-", round((1.754-0.93)*100/1.754, digits = 1), round((1.740-0.93)*100/1.740, digits = 1))
+table <- data.frame(name, min, twoper, median, mean, ninetyper, max, sd, range, loss)
+
+knitr::kable(table, "simple", col.names = c("Method", "Min", "2.5%", "median", "mean", "97.5%", "Max", "sd", "Range (Max-min)", "Loss(%)"), 
+             align = c("l", "c", "c", "c", "c", "c", "c", "c", "c", "c"),
+             caption = "Summary of Vitamin B12 (µg/100g) in BP 111717 with different methods")
+```
